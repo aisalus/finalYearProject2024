@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  db:
+    image: mongodb/mongodb-community-server:latest
+    ports:
+      - '27017:27017'
+    volumes:
+      - appData:/data/db
+    networks:
+      - mongodb
+  backend:
+    image: backend
+    ports:
+      - '5000:5000'
+    volumes:
+      - appData:/data/backend
+    networks:
+      - mongodb
+    depends_on:
+      - db
+volumes:
+  appData:
+networks:
+  mongodb:

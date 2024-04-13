@@ -1,0 +1,67 @@
+.wrapper {
+    min-height: 100vh;
+    overflow-x: hidden;
+    background: linear-gradient(#fff, #ececec);
+}
+
+.carousel-item img {
+    object-fit: cover;
+    object-position: center;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+#landingTagline {
+    height: 100vh;
+}
+.colourAnim {
+    background: linear-gradient(63deg, #82d4bb, #82c09a, #82ac9f, #829298, #94778b);
+    background-size: 1000% 1000%;
+    -webkit-animation: backgroundAnim 35s ease infinite;
+    -moz-animation: backgroundAnim 35s ease infinite;
+    animation: backgroundAnim 35s ease infinite;
+}
+
+.textAnim {
+    -webkit-animation: textAnim 10s ease infinite;
+    -moz-animation: textAnim 10s ease infinite;
+    animation: textAnim 10s ease infinite;
+}
+
+@-webkit-keyframes backgroundAnim {
+    0%{background-position:0% 90%}
+    50%{background-position:100% 11%}
+    100%{background-position:0% 90%}
+}
+@-moz-keyframes backgroundAnim {
+    0%{background-position:0% 90%}
+    50%{background-position:100% 11%}
+    100%{background-position:0% 90%}
+}
+@keyframes backgroundAnim {
+    0%{background-position:0% 90%}
+    50%{background-position:100% 11%}
+    100%{background-position:0% 90%}
+}
+
+@-webkit-keyframes textAnim {
+    0%{color:#82d4bb}
+    25%{color:#82c09a}
+    50%{color: #94778b}
+    75%{color:#82c09a}
+    100%{color:#82d4bb}
+}
+@-moz-keyframes textAnim {
+    0%{color:#82d4bb}
+    25%{color:#82c09a}
+    50%{color: #94778b}
+    75%{color:#82c09a}
+    100%{color:#82d4bb}
+}
+@keyframes textAnim {
+    0%{color:#82d4bb}
+    25%{color:#82c09a}
+    50%{color: #94778b}
+    75%{color:#82c09a}
+    100%{color:#82d4bb}
+}

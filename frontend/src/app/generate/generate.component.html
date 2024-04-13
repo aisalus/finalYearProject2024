@@ -1,0 +1,31 @@
+<div class="card m-5">
+  <div class="card-body p-5">
+    <h1 class="card-title mb-3">Get recommendations</h1>
+    <p class="card-text">Input a game you enjoy and generate a tailored game recommendation.</p>
+    <div class="mb-3">
+      <label for="gameInput" class="form-label">Enter game name</label>
+      <ng-select
+          id="gameInput"
+          [items]="searchItems"
+           bindLabel="title"
+           bindValue="_id"
+           [(ngModel)]="selectedGameId"
+           (search)="onSearchChange($event.term)">
+      </ng-select>
+      <ng-container *ngIf="loggedIn">
+        <div class="form-check mt-2">
+          <label for="libraryStatus" class="form-check-label">Include game library</label>
+          <input type="checkbox" id="libraryStatus" class="form-check-input" (change)="setLibraryStatus($event.target)">
+        </div>
+      </ng-container>
+    </div>
+    <button class="btn btn-success" type="submit" id="generateSubmit" (click)="generateRec()">{{ generateText }}</button>
+  </div>
+</div>
+
+<div class="card m-5">
+  <div class="card-body p-5">
+    <h2 class="card-title mb-3">How does this work?</h2>
+    <p class="card-text">Explanation of how it works goes here</p>
+  </div>
+</div>

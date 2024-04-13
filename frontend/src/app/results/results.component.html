@@ -1,0 +1,24 @@
+<div class="row">
+    <div class="col-md-6 text-center">
+        <img src="{{coverImage}}" class="w-50 m-3"/>
+        <img src="{{screenshotImage}}" class="w-25 m-3"/>
+    </div>
+    <div class="col-md-6">
+        <div class="m-3">
+            <h2 class="">Why this game?</h2>
+            <p class="">Reasoning goes down here u silly Lorem ipsum dolor sit amet consectetur, adipisicing elit. Sint quidem omnis ipsa tenetur, enim neque, similique officia totam soluta illo quia porro tempora illum culpa. Aspernatur eum similique provident consequatur.</p>
+        </div>
+        <div class="text-center">
+            <a class="btn btn-lg btn-primary mb-3" href="{{resultData.moby_url}}">More info</a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 text-center">
+        <div class="card m-5">
+            <h1 class="card-header">{{resultData.title}}</h1>
+            <p class="card-body" [innerHTML]="description"></p>
+        </div>
+    </div>
+</div>
