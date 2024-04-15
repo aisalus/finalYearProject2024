@@ -32,16 +32,24 @@ export class GenerateComponent {
   generateRec(): void {
     if(this.selectedGameId) {
       this.generateText = "Generating...";
-      this.api.getGameRec(this.selectedGameId).subscribe(data => {
-        if(this.user != null){
-          let userId = this.user.sub.split('|')[1];
-          this.api.setUserHistory(userId, data).subscribe();
-        }
+      let userId = "";
+      if (this.user != null){
+        userId = this.user.sub.split('|')[1];
+      }
+      let apiCall = (this.userLibraryStatus) ? this.api.getGameRec(this.selectedGameId, userId) : this.api.getGameRec(this.selectedGameId);
+      apiCall.subscribe(data => {
+        this.addToHistory(data);
         this.router.navigateByUrl(`results/${data.id}`)
       });
     }
   }
 
+  addToHistory(data: any): void {
+    if(this.user != null){
+      let userId = this.user.sub.split('|')[1];
+      this.api.setUserHistory(userId, data).subscribe();
+    }
+  }
   setLibraryStatus(val: any): void {
     this.userLibraryStatus = val.checked;
   }

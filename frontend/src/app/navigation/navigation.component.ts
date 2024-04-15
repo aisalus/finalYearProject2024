@@ -18,8 +18,10 @@ export class NavigationComponent {
 
   setUserData(user: any){
     if(user != null){
+      let id = user['sub'].split('|')[1];
+      sessionStorage.setItem("userId", id);
       let userData = {
-        "user_id": user['sub'].split('|')[1],
+        "user_id": id,
         "name": user['name']
       }
       this.api.addUser(userData).subscribe();
@@ -28,6 +30,7 @@ export class NavigationComponent {
 
   logOut(): void {
     sessionStorage.removeItem("loggedIn");
+    sessionStorage.removeItem("userId");
     this.auth.logout();
     window.location.reload();
   }

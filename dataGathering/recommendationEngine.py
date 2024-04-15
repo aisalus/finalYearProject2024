@@ -1,35 +1,49 @@
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import requests
 import databaseOps as db
 import sentimentAnalysis as snt
 import json
 
 # Main WIPs here:
-# slow
 # How do I show the reasoning?
-# Output format - this will make more sense when building front end - id needed?
-# Search tool - Game id lookup thingy - frontend? keep this id based? API endpoint?
 # accuracy - how is this measurable?
-# search endpoint - punctuation problems
-
-def prepDataframe(game):
-    genreStr = "-".join(game['attributes']['Basic Genres']).replace("/", "-")
+# Check sentiment analysis thing to see why it takes so long
+apiUrl = "http://127.0.0.1:5000"
+def prepDataframe(gameData, userLibrary = 0):
+    data = {}
+    for attK, attV in gameData['attributes'].items():
+        data.update({attK: "|".join(attV)})
+    
+    if (userLibrary != 0):
+        print("LOG --> REC ENGINE --> \tOPTIONAL: Processing user library...")
+        for game in userLibrary:
+            attributes = json.loads(requests.get(apiUrl + "/api/v1.0/games/" + game["_id"] +"/attributes").content.decode())
+            attributes = attributes["attributes"].items()
+            for attK, attV in attributes:
+                if(data.get(attK) != None):
+                    data.update({attK: data.get(attK) + "|" + "|".join(attV)})
+                else:
+                    data.update({attK: "|".join(attV)})
 
     # get games of genre of game
-    genreResponse = json.loads(db.games_by_genre(genreStr))
+    genreResponse = requests.post(apiUrl + "/api/v1.0/games", data=json.dumps(data), headers={"content-type": "application/json"})
 
     # put that data into dataframe
-    print("Stage 1: Initialising dataframes...")
-    data = pd.json_normalize(genreResponse)
-    data2 = pd.json_normalize(game)
+    print("LOG --> REC ENGINE --> \tStage 1: Initialising dataframes...")
+    data = pd.json_normalize(json.loads(genreResponse.content.decode()))
+    data2 = pd.json_normalize(gameData)
     data = pd.concat([data2, data])
     data = data.reset_index()
     return data
 
 def processAttributes(data):
     # Put all attributes into one column as string
-    print("Stage 2: Processing attributes...")
+    print("LOG --> REC ENGINE --> \tStage 2: Processing attributes...")
     attributeNames = [col for col in data if col.startswith('attributes')]
     for att in attributeNames:
         data[att] = data[att].apply(attToStr)
@@ -64,11 +78,16 @@ def sentimentCalc(recs):
         return recs[0]
     return topRated
 
-def recommendGame(gameId):
-    gameData = json.loads(db.get_game_by_id(gameId))
-    print("Input game:", gameData['title'])
+def recommendGame(gameId, userId = 0):
+    gameData = json.loads(requests.get(apiUrl + "/api/v1.0/games/" + gameId + "/info").content.decode())
+    print("LOG --> REC ENGINE --> \tInput game:", gameData['title'])
 
-    data = prepDataframe(gameData)
+    if(userId != 0):
+        library = requests.get(apiUrl + "/api/v1.0/users/" + userId + "/library")
+        library = json.loads(library.content.decode())
+        data = prepDataframe(gameData, library)
+    else:
+        data = prepDataframe(gameData)
     data = processAttributes(data)
 
     # Limit dataset to necessary columns
@@ -78,11 +97,11 @@ def recommendGame(gameId):
     data = data.drop('index',axis=1)
 
     # Clean description text
-    print("Stage 3: Processing description...")
+    print("LOG --> REC ENGINE --> \tStage 3: Processing description...")
     data['description'] = data['description'].apply(clean_text)
 
     # Find cosine similarity between games
-    print("Stage 4: Calculating similarity...")
+    print("LOG --> REC ENGINE --> \tStage 4: Calculating similarity...")
     v = CountVectorizer(stop_words="english")
     vector = v.fit_transform(data['description'])
     similarities = cosine_similarity(vector)
@@ -96,6 +115,5 @@ def recommendGame(gameId):
     recTitle = sentimentCalc(recommendations)
     recId = data[data['title']==recTitle]['_id'].values[0]
     result = {"title":recTitle, "id":recId}
+    print(f"LOG --> REC ENGINE --> \tResulting game: {result['title']}")
     return result
-
-# print(recommendGame("6602db59301d967bf44b6f06"))

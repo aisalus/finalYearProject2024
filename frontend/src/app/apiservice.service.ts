@@ -15,7 +15,10 @@ export class ApiserviceService {
     return this.http.get<any[]>(`${this.apiUrl}/api/v1.0/games`);
   }
 
-  getGameRec(id: number): Observable<any> {
+  getGameRec(id: number, userId?:string): Observable<any> {
+    if(userId) {
+      return this.http.get<any[]>(`${this.apiUrl}/api/v1.0/games/rec/${id}?userId=${userId}`);
+    }
     return this.http.get<any[]>(`${this.apiUrl}/api/v1.0/games/rec/${id}`);
   }
 
@@ -31,20 +34,24 @@ export class ApiserviceService {
     return this.http.put<any>(`${this.apiUrl}/api/v1.0/users`, userData);
   }
 
-  getUserHistory(id: number): Observable<any> {
+  getUserHistory(id: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/api/v1.0/users/${id}/history`);
   }
 
-  setUserHistory(id: number, data: any): Observable<any> {
+  setUserHistory(id: string, data: any): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/api/v1.0/users/${id}/history`, data);
   }
 
-  getUserLibrary(id: number, post: any): Observable<any> {
+  getUserLibrary(id: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/api/v1.0/users/${id}/library`);
   }
 
-  setUserLibrary(id: number, data: any): Observable<any> {
+  setUserLibrary(id: string, data: any): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/api/v1.0/users/${id}/library`, data);
+  }
+
+  deleteFromLibrary(id: string, lid: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/api/v1.0/users/${id}/library/delete/${lid}`);
   }
 
   deactivateUser(id: string): Observable<any> {

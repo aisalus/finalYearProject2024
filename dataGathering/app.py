@@ -53,21 +53,22 @@ def search_game_by_title(title):
     else:
         return make_response( jsonify( { "error" : "No games found" } ), 404 )
 
-# --- Get a sample of games of genre --- #
-@app.route("/api/v1.0/games/genre/<string:genres>", methods=["GET"])
-def games_by_genre(genres):
+# --- Get a sample of games using context --- #
+@app.route("/api/v1.0/games", methods=["POST"])
+def games_by_attribute():
     data_to_return = []
+    data = json.loads(request.data.decode())
+    terms = []
 
-    # Separate individual genre names with the 'or' operator
-    genres = genres.replace("-", "|")
-
+    for itemK, itemV in data.items():
+        terms.append({"attributes."+ itemK : {'$regex':'.*'+itemV+'.*', '$options' :'i'}})
     # Query to match where 'Basic Genres' contains any of the provided genres
-    query = {"attributes.Basic Genres" : {'$regex':'.*'+genres+'.*', '$options' :'i'}}
+    query = {"$or" : terms}
 
     # Aggregation pipeline to match the query and get a random sample for processing
-    pipeline = [{"$match":query},{"$sample": {"size": 1000}}]
-    games = coll.aggregate(pipeline)
+    pipeline = [{"$match":query},{"$sample": {"size": 500}}]
 
+    games = coll.aggregate(pipeline)
     for game in games:
         game['_id'] = str(game['_id'])
         data_to_return.append(game)
@@ -108,6 +109,8 @@ def get_game_platforms(id):
 # --- Get recommendations from id --- #
 @app.route("/api/v1.0/games/rec/<string:id>", methods=["GET"])
 def get_recommendations(id):
+    if (request.args.get('userId')):
+        return make_response( jsonify(eng.recommendGame(id, request.args.get('userId'))), 200 )
     return make_response( jsonify(eng.recommendGame(id)), 200 )
 
 # --- Add user info --- #
@@ -131,7 +134,10 @@ def addUserId():
 def getUserHistory(id):
     user = userColl.find_one({'_id':id})
     if user is not None:
-        return make_response( jsonify( user['history'] ), 200 )
+        targetData = user['history']
+        for item in targetData:
+            item['_id'] = str(item['_id'])
+        return make_response( jsonify( targetData ), 200 )
     else:
         return make_response( jsonify( { "error" : "Invalid user ID" } ), 404 )
 
@@ -139,8 +145,11 @@ def getUserHistory(id):
 @app.route("/api/v1.0/users/<string:id>/history", methods=["PUT"])
 def setUserHistory(id):
     req = json.loads(request.data.decode())
+    item = coll.find_one({'_id':ObjectId(req['id'])})
     newEntry = {
-        "gameId": req["id"],
+        "_id": item['_id'],
+        "moby_url": item['moby_url'],
+        "title": item['title'],
         "timestamp": datetime.datetime.now()
     }
     userColl.update_one( { "_id" : id }, \
@@ -152,7 +161,10 @@ def setUserHistory(id):
 def getUserLibrary(id):
     user = userColl.find_one({'_id':id})
     if user is not None:
-        return make_response( jsonify( user['library'] ), 200 )
+        targetData = user['library']
+        for item in targetData:
+            item['_id'] = str(item['_id'])
+        return make_response( jsonify( targetData ), 200 )
     else:
         return make_response( jsonify( { "error" : "Invalid user ID" } ), 404 )
 
@@ -160,42 +172,57 @@ def getUserLibrary(id):
 @app.route("/api/v1.0/users/<string:id>/library", methods=["PUT"])
 def setUserLibrary(id):
     req = json.loads(request.data.decode())
+    item= coll.find_one({'_id':ObjectId(req['gameId'])})
     newEntry = {
-        "gameId": req["gameId"],
+        "_id": item['_id'],
+        "moby_url": item['moby_url'],
+        "title": item['title'],
         "timestamp": datetime.datetime.now()
     }
     userColl.update_one( { "_id" : id }, \
         { "$push": { "library" : newEntry } } )
     return make_response( jsonify( {"message":"success"}), 200 )
 
+# --- Delete one from user library --- #
 @app.route("/api/v1.0/users/<string:id>/library/delete/<string:lid>", methods=["DELETE"])
-def deleteOneInLibrary():
-    return -1
+def deleteOneInLibrary(id, lid):
+    libraryItem = userColl.find({"_id" :  id, 'library._id' : ObjectId(lid)})
+    if libraryItem is not None:
+        print(userColl.update_one( \
+        { "_id" :  id }, \
+        { "$pull" : {"library" : {"_id" : ObjectId(lid)}}} ))
+        return make_response( jsonify( { "message" : "success" } ), 204 )
+    else:
+        return make_response( jsonify( { "error" : "Invalid user ID" } ), 404 )
 
+# --- Clear history --- #
 @app.route("/api/v1.0/users/<string:id>/history/clear", methods=["DELETE"])
 def clearUserHistory(id):
     userColl.update_one( { "_id" : id }, \
         { "$set": { "history" : [] } } )
-    return make_response( jsonify( {"message":"success"}), 200 )
+    return make_response( jsonify( {"message":"success"}), 204 )
 
+# --- Clear library --- #
 @app.route("/api/v1.0/users/<string:id>/library/clear", methods=["DELETE"])
 def clearUserLibrary(id):
     userColl.update_one( { "_id" : id }, \
         { "$set": { "library" : [] } } )
-    return make_response( jsonify( {"message":"success"}), 200 )
+    return make_response( jsonify( {"message":"success"}), 204 )
 
+# --- Get auth0 token --- #
 def getUserToken():
     headers = { 'content-type': "application/json" }
     data = "{\"client_id\":\"4Ngnua8oTEmtfB6A2JspHn1dX3lIlLQ6\",\"client_secret\":\"3Gx8gOfI8F2XqXOPBm6ti9ojFYXcON727ukvYZA2-QH4D4q-qKF2HGjMPcKk6j2P\",\"audience\":\"https://dev-x4savaa1u24lh134.us.auth0.com/api/v2/\",\"grant_type\":\"client_credentials\"}"
     token = requests.post("https://dev-x4savaa1u24lh134.us.auth0.com/oauth/token", data, headers=headers)
     return json.loads(token.content.decode())["access_token"]
 
+# --- Delete user --- #
 @app.route("/api/v1.0/users/<string:id>/deactivate", methods=["DELETE"])
 def deactivateUser(id):
     token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkxMdkN2RVlGTVM1N29XVXR1YkE3dyJ9.eyJpc3MiOiJodHRwczovL2Rldi14NHNhdmFhMXUyNGxoMTM0LnVzLmF1dGgwLmNvbS8iLCJzdWIiOiI0TmdudWE4b1RFbXRmQjZBMkpzcEhuMWRYM2xJbExRNkBjbGllbnRzIiwiYXVkIjoiaHR0cHM6Ly9kZXYteDRzYXZhYTF1MjRsaDEzNC51cy5hdXRoMC5jb20vYXBpL3YyLyIsImlhdCI6MTcxMzAyMTM4MSwiZXhwIjoxNzEzMTA3NzgxLCJzY29wZSI6ImRlbGV0ZTp1c2VycyIsImd0eSI6ImNsaWVudC1jcmVkZW50aWFscyIsImF6cCI6IjROZ251YThvVEVtdGZCNkEySnNwSG4xZFgzbElsTFE2In0.dTxNhcKezW9F3CSip1a4-B8zasL-loE2zfI9eyvnlBbu2kKhNABhU6DpY12yfCgV-Q7AV4bzsRFDt4N8xfJPHSVOb-snguP-rmyK79apF-M88Te6vlZlhCJAiq1fv41RkWjY-6fCVHKfrZqonBH6oy0BGCfjGXcFsxGzWHtg3SYBlbEwqMfBKTpTnbx1KB5b5XhFRbVxyzWdGjB5ASnJTijvu5Uc5Bb01aX-46DBQmPgX5lwYV-NdT7Fa0qk87F8DE1cHcAYDu0Kw_UDN8nAkWO81AROLtYvhaQc7eeuLk_QWHO3sUF5Uls1dnc7vhzJGSuRKrbpWWGTZw33yLeS2g"
     headers = {'authorization': "Bearer " + token}
     res = requests.delete("https://dev-x4savaa1u24lh134.us.auth0.com/api/v2/users/"+id, headers=headers)
-    time.sleep(0.5)
+    userColl.delete_one({"_id" : id.split("|")[1]})
     return make_response( jsonify( res.text ), 204 )
 
 if(__name__ == "__main__"):

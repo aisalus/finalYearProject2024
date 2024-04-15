@@ -18,7 +18,9 @@ export class UserpageComponent {
   user: any;
   deactivateUser(userID:any): void {
     this.api.deactivateUser(userID).subscribe(data => {
-        window.location.reload();
+      sessionStorage.removeItem("loggedIn");
+      this.auth.logout();
+      window.location.reload();
     });
   }
 

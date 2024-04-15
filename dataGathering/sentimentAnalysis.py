@@ -17,7 +17,7 @@ def getPage(gameid, game, headers):
         soup = BeautifulSoup(req.content, "html.parser")
         return soup
     except Exception as e:
-        print(f"Error opening page {e}")
+        print(f"LOG --> SENTIMENT --> \tError opening page {e}")
 
 def getGameId(game, headers):
     searchUrl = f'https://api.opencritic.com/api/meta/search?criteria={game}'
@@ -28,11 +28,11 @@ def getGameId(game, headers):
     for r in resultsJson:
         ratio = fuzz.ratio(game.lower(), r['name'].lower())
         if game.lower() in r['name'].lower():
-            print(f'{r["name"]} found!')
+            print(f'LOG --> SENTIMENT --> \t{r["name"]} found!')
             found_id = r['id']
             return found_id
         elif ratio > 80:
-            print(f'{game} not found exactly, getting review for closest result: {r["name"]}')
+            print(f'LOG --> SENTIMENT --> \t{game} not found exactly, getting review for closest result: {r["name"]}')
             found_id = r["id"]
             return found_id
     return found_id
@@ -40,7 +40,7 @@ def getGameId(game, headers):
 def getReviews(game):
     id = getGameId(game, headers=headers)
     if(id == -1):
-        print("No game found")
+        print("LOG --> SENTIMENT --> \tNo game found")
         return -1
     page = getPage(id, game, headers)
     reviews = page.find_all("app-review-row")
@@ -71,4 +71,3 @@ def getSentiment(game):
     return averageSentiment(values)
 
 # TODO: Comment, print descriptively for logging
-# print(getSentiment("Pokémon Scarlet"))
