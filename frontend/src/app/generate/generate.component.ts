@@ -21,12 +21,13 @@ export class GenerateComponent {
   selectedGameId: any;
   searchItems = [];
   userLibraryStatus = false;
+  sentimentStatus = false;
   user: any;
   generateText: string = "Generate";
   loggedIn: any = sessionStorage.getItem("loggedIn");
 
   onSearchChange(searchValue: any): void {  
-    this.api.searchGames(searchValue).subscribe(data => this.searchItems = data)
+    this.api.searchGames(searchValue).subscribe(data => this.searchItems = data);
   }
 
   generateRec(): void {
@@ -36,10 +37,11 @@ export class GenerateComponent {
       if (this.user != null){
         userId = this.user.sub.split('|')[1];
       }
-      let apiCall = (this.userLibraryStatus) ? this.api.getGameRec(this.selectedGameId, userId) : this.api.getGameRec(this.selectedGameId);
+      let apiCall = (this.user != null) ? this.api.getGameRec(this.selectedGameId, this.sentimentStatus, this.userLibraryStatus, userId) 
+      : this.api.getGameRec(this.selectedGameId, this.sentimentStatus, this.userLibraryStatus);
       apiCall.subscribe(data => {
         this.addToHistory(data);
-        this.router.navigateByUrl(`results/${data.id}`)
+        this.router.navigateByUrl(`results/${data.id}`, {state: data})
       });
     }
   }
@@ -52,6 +54,10 @@ export class GenerateComponent {
   }
   setLibraryStatus(val: any): void {
     this.userLibraryStatus = val.checked;
+  }
+
+  setSentimentStatus(val: any): void {
+    this.sentimentStatus = val.checked;
   }
 
   ngOnInit() {

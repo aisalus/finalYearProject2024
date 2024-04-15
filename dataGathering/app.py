@@ -109,9 +109,11 @@ def get_game_platforms(id):
 # --- Get recommendations from id --- #
 @app.route("/api/v1.0/games/rec/<string:id>", methods=["GET"])
 def get_recommendations(id):
+    sentiment = request.args.get('useSentiment') == "true"
+    library = request.args.get('useLibrary') == "true"
     if (request.args.get('userId')):
-        return make_response( jsonify(eng.recommendGame(id, request.args.get('userId'))), 200 )
-    return make_response( jsonify(eng.recommendGame(id)), 200 )
+        return make_response( jsonify(eng.recommendGame(id, sentiment, library, request.args.get('userId'))), 200 )
+    return make_response( jsonify(eng.recommendGame(id, sentiment, library)), 200 )
 
 # --- Add user info --- #
 @app.route("/api/v1.0/users", methods=["PUT"])
@@ -124,6 +126,7 @@ def addUserId():
         "_id": req["user_id"],
         "history": [],
         "library": [],
+        "blocklist": [],
         "name": req["name"]
     }
     userColl.insert_one(newUser)
@@ -150,6 +153,7 @@ def setUserHistory(id):
         "_id": item['_id'],
         "moby_url": item['moby_url'],
         "title": item['title'],
+        "reasoning": req['reasoning'],
         "timestamp": datetime.datetime.now()
     }
     userColl.update_one( { "_id" : id }, \

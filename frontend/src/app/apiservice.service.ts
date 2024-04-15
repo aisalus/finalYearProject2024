@@ -15,11 +15,11 @@ export class ApiserviceService {
     return this.http.get<any[]>(`${this.apiUrl}/api/v1.0/games`);
   }
 
-  getGameRec(id: number, userId?:string): Observable<any> {
+  getGameRec(id: number, useSentiment:boolean, useLibrary:boolean, userId?:string, ): Observable<any> {
     if(userId) {
-      return this.http.get<any[]>(`${this.apiUrl}/api/v1.0/games/rec/${id}?userId=${userId}`);
+      return this.http.get<any[]>(`${this.apiUrl}/api/v1.0/games/rec/${id}?useSentiment=${useSentiment}&useLibrary=${useLibrary}&userId=${userId}`);
     }
-    return this.http.get<any[]>(`${this.apiUrl}/api/v1.0/games/rec/${id}`);
+    return this.http.get<any[]>(`${this.apiUrl}/api/v1.0/games/rec/${id}?useSentiment=${useSentiment}&useLibrary=${useLibrary}`);
   }
 
   getGameById(id: number): Observable<any> {

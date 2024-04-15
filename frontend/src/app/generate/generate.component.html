@@ -1,8 +1,9 @@
-<div class="card m-5">
+<div class="card m-5" style="max-width: 75vw;">
   <div class="card-body p-5">
     <h1 class="card-title mb-3">Get recommendations</h1>
+    <hr/>
     <p class="card-text">Input a game you enjoy and generate a tailored game recommendation.</p>
-    <div class="mb-3">
+    <div class="mb-4">
       <label for="gameInput" class="form-label">Enter game name</label>
       <ng-select
           id="gameInput"
@@ -10,22 +11,42 @@
            bindLabel="title"
            bindValue="_id"
            [(ngModel)]="selectedGameId"
-           (search)="onSearchChange($event.term)">
+           (search)="onSearchChange($event.term)"
+           class="mb-2">
       </ng-select>
+      
       <ng-container *ngIf="loggedIn">
-        <div class="form-check mt-2">
+        <div class="form-check">
           <label for="libraryStatus" class="form-check-label">Include game library</label>
           <input type="checkbox" id="libraryStatus" class="form-check-input" (change)="setLibraryStatus($event.target)">
         </div>
       </ng-container>
+      <div class="form-check">
+        <label for="sentimentStatus" class="form-check-label">Use review sentiment</label>
+        <input type="checkbox" id="sentimentStatus" class="form-check-input" (change)="setSentimentStatus($event.target)">
+        <p class="form-text">The above options will make recommendations more accurate, but take more time to generate.</p>
+      </div>
     </div>
-    <button class="btn btn-success" type="submit" id="generateSubmit" (click)="generateRec()">{{ generateText }}</button>
+    <hr/>
+    <button class="btn btn-success mt-2" type="submit" id="generateSubmit" (click)="generateRec()">{{ generateText }}</button>
   </div>
 </div>
 
-<div class="card m-5">
+<div class="card m-5" style="max-width: 75vw;">
   <div class="card-body p-5">
     <h2 class="card-title mb-3">How does this work?</h2>
-    <p class="card-text">Explanation of how it works goes here</p>
+    <hr/>
+    <h3>Game context</h3>
+    <p class="card-text">Each game in the dataset contains attributes which provide context about a game's features.
+      <br/>The recommendation algorithm collects the input game's attributes and takes a sample of games with similar attributes before calculating the cosine similarity between games.
+    <br/>The result with the closest cosine similarity is presented.</p>
+    <hr/>
+    <h3>Game library</h3>
+    <p class="card-text">If logged in, a user can configure their game library to provide more context to the algorithm.
+      <br/>This adds all attributes from games in the game library in deciding the sample of games for calculation.
+    </p>
+    <hr/>
+    <h3>Sentiment analysis</h3>
+    <p class="card-text">When enabled, reviews for top similarity games are analysed where available and overall positive/negative sentiment is calculated. The most positive result is presented to the user.</p>
   </div>
 </div>

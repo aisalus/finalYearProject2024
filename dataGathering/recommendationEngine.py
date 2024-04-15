@@ -5,14 +5,13 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import requests
-import databaseOps as db
 import sentimentAnalysis as snt
 import json
 
 # Main WIPs here:
 # How do I show the reasoning?
 # accuracy - how is this measurable?
-# Check sentiment analysis thing to see why it takes so long
+# break code down more and comment - readability
 apiUrl = "http://127.0.0.1:5000"
 def prepDataframe(gameData, userLibrary = 0):
     data = {}
@@ -78,11 +77,11 @@ def sentimentCalc(recs):
         return recs[0]
     return topRated
 
-def recommendGame(gameId, userId = 0):
+def recommendGame(gameId, sentiment, library, userId = 0):
     gameData = json.loads(requests.get(apiUrl + "/api/v1.0/games/" + gameId + "/info").content.decode())
     print("LOG --> REC ENGINE --> \tInput game:", gameData['title'])
 
-    if(userId != 0):
+    if(library):
         library = requests.get(apiUrl + "/api/v1.0/users/" + userId + "/library")
         library = json.loads(library.content.decode())
         data = prepDataframe(gameData, library)
@@ -108,12 +107,43 @@ def recommendGame(gameId, userId = 0):
 
     # Put similarity calcs into dataframe and use to find highest similarity of chosen game
     df2 = pd.DataFrame(similarities, columns=data['title'], index=data['title']).reset_index()
-    recommendations = pd.DataFrame(df2.nlargest(4,gameData['title'])['title'])
+    recommendations = pd.DataFrame(df2.nlargest(4,gameData['title'])[['title',gameData['title']]])
     recommendations = recommendations[recommendations['title']!=gameData['title']]
-    recommendations = list(recommendations['title'].to_dict().values())
+    recList = list(recommendations['title'].to_dict().values())
 
-    recTitle = sentimentCalc(recommendations)
+    recTitle = sentimentCalc(recList) if sentiment else recList[0]
     recId = data[data['title']==recTitle]['_id'].values[0]
-    result = {"title":recTitle, "id":recId}
+    similarity = recommendations[recommendations['title']==recTitle][gameData['title']].values[0]
+    result = {"title":recTitle, "id":recId, "similarity":similarity}
     print(f"LOG --> REC ENGINE --> \tResulting game: {result['title']}")
+    reasoning = compareInputAndResult(result, gameData)
+    result.update({"reasoning":reasoning})
+    result.pop("similarity")
     return result
+
+def compareInputAndResult(result, inputData):
+    resultInfo = json.loads(requests.get(apiUrl + f"/api/v1.0/games/{result['id']}/info").content.decode())
+    resultAttributes = resultInfo['attributes']
+    inputAttributes = inputData['attributes']
+    matchingAttributes = []
+
+    for attKres, attVres in resultAttributes.items():
+        for attKin, attVin in inputAttributes.items():
+            foundAttrs = [att for att in attVres if att in attVin]
+            [matchingAttributes.append(item) for item in foundAttrs]
+
+    descriptionSimilarityScore = result['similarity']
+    if(descriptionSimilarityScore > 0.7):
+        similarityLevel = "Very high"
+    elif(descriptionSimilarityScore > 0.5):
+        similarityLevel = "High"
+    elif(descriptionSimilarityScore > 0.3):
+        similarityLevel = "Medium"
+    else:
+        similarityLevel = "Low"
+
+    resData = {
+        "matchingAttributes": matchingAttributes,
+        "similarityLevel": similarityLevel
+    }
+    return resData
