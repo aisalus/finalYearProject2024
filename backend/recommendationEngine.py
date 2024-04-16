@@ -9,7 +9,6 @@ import sentimentAnalysis as snt
 import json
 
 # Main WIPs here:
-# How do I show the reasoning?
 # accuracy - how is this measurable?
 # break code down more and comment - readability
 apiUrl = "http://127.0.0.1:5000"

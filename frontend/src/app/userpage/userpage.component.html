@@ -22,9 +22,11 @@
   <div class="row">
     <div class="col-12">
       <div class="card m-3">
-        <h3 class="card-header p-4">Suggestions</h3>
+        <h2 class="card-header p-4 h3">Suggestions</h2>
         <div class="card-text p-4">
-          Put functional suggestion box here
+          <label class="form-label" for="suggestionInput">Send us a suggestion to make this app better.</label>
+          <textarea class="form-control mb-3" #suggestionInput id="suggestionInput" rows="3"></textarea>
+          <button class="btn btn-success" type="submit" (click)="addSuggestion(suggestionInput.value)">{{submitText}}</button>
         </div>
       </div>
     </div>

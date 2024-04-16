@@ -4,15 +4,8 @@
     background: linear-gradient(#fff, #ececec);
 }
 
-.carousel-item img {
-    object-fit: cover;
-    object-position: center;
-    height: 100vh;
-    overflow: hidden;
-  }
-
-#landingTagline {
-    height: 100vh;
+.itemTable {
+    min-width: 50vw;
 }
 .colourAnim {
     background: linear-gradient(63deg, #82d4bb, #82c09a, #82ac9f, #829298, #94778b);

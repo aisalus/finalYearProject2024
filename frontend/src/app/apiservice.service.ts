@@ -65,4 +65,8 @@ export class ApiserviceService {
   clearUserLibrary(id: string): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/api/v1.0/users/${id}/library/clear`);
   }
+
+  addSuggestion(suggestion: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/api/v1.0/suggestions`, suggestion);
+  }
 }

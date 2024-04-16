@@ -16,6 +16,8 @@ export class UserpageComponent {
   ) {}
   loggedIn: any = sessionStorage.getItem("loggedIn");
   user: any;
+  submitText: string = "Submit";
+
   deactivateUser(userID:any): void {
     this.api.deactivateUser(userID).subscribe(data => {
       sessionStorage.removeItem("loggedIn");
@@ -32,6 +34,15 @@ export class UserpageComponent {
   clearLibrary(userID: any): void {
     userID = userID.split("|")[1];
     this.api.clearUserLibrary(userID).subscribe();
+  }
+
+  addSuggestion(message: string): void {
+    if(message != ""){
+      let data = {"suggestionMessage":message};
+      console.log(data);
+      this.api.addSuggestion(data).subscribe();
+      this.submitText = "Submitted!";
+    }
   }
 
   ngOnInit() {

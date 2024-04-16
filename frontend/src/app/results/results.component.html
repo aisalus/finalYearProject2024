@@ -1,7 +1,7 @@
 <div class="row">
     <div class="col-md-6 text-center">
-        <img src="{{coverImage}}" class="w-50 m-3"/>
-        <img src="{{screenshotImage}}" class="w-25 m-3"/>
+        <img src="{{coverImage}}" class="w-50 m-3" alt="Resulting game cover image"/>
+        <img src="{{screenshotImage}}" [hidden]='screenshotImage == ""' class="w-25 m-3" alt="Resulting game screenshot"/>
     </div>
     <div class="col-md-6">
         <div class="m-3">

@@ -15,6 +15,7 @@ client = MongoClient("mongodb://localhost:27017")
 db = client.project
 coll = db.games
 userColl = db.users
+suggestionColl = db.suggestions
 
 # --- Get all games/query games --- #
 @app.route("/api/v1.0/games", methods=["GET"])
@@ -228,6 +229,18 @@ def deactivateUser(id):
     res = requests.delete("https://dev-x4savaa1u24lh134.us.auth0.com/api/v2/users/"+id, headers=headers)
     userColl.delete_one({"_id" : id.split("|")[1]})
     return make_response( jsonify( res.text ), 204 )
+
+# --- Add to suggestions --- #
+@app.route("/api/v1.0/suggestions", methods=["PUT"])
+def addSuggestion():
+    req = json.loads(request.data.decode())
+    suggestion = {
+        "_id": ObjectId(),
+        "text": str(req['suggestionMessage']),
+        "timestamp": datetime.datetime.now()
+    }
+    suggestionColl.insert_one(suggestion)
+    return make_response( jsonify({"message":"success"}), 200 )
 
 if(__name__ == "__main__"):
     app.run(debug="true")
