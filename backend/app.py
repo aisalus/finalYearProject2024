@@ -195,9 +195,9 @@ def setUserLibrary(id):
 def deleteOneInLibrary(id, lid):
     libraryItem = userColl.find({"_id" :  id, 'library._id' : ObjectId(lid)})
     if libraryItem is not None:
-        print(userColl.update_one( \
+        userColl.update_one( \
         { "_id" :  id }, \
-        { "$pull" : {"library" : {"_id" : ObjectId(lid)}}} ))
+        { "$pull" : {"library" : {"_id" : ObjectId(lid)}}} )
         return make_response( jsonify( { "message" : "success" } ), 204 )
     else:
         return make_response( jsonify( { "error" : "Invalid user ID" } ), 404 )
