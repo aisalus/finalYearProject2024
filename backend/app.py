@@ -113,8 +113,8 @@ def get_recommendations(id):
     sentiment = request.args.get('useSentiment') == "true"
     library = request.args.get('useLibrary') == "true"
     if (request.args.get('userId')):
-        return make_response( jsonify(eng.recommendGame(id, sentiment, library, request.args.get('userId'))), 200 )
-    return make_response( jsonify(eng.recommendGame(id, sentiment, library)), 200 )
+        return make_response( jsonify(eng.recommendMain(id, sentiment, library, request.args.get('userId'))), 200 )
+    return make_response( jsonify(eng.recommendMain(id, sentiment, library)), 200 )
 
 # --- Add user info --- #
 @app.route("/api/v1.0/users", methods=["PUT"])
@@ -150,6 +150,8 @@ def getUserHistory(id):
 def setUserHistory(id):
     req = json.loads(request.data.decode())
     item = coll.find_one({'_id':ObjectId(req['id'])})
+    if(item is None):
+        return make_response( jsonify( { "error" : "Invalid Game ID" } ), 404 )
     newEntry = {
         "_id": item['_id'],
         "moby_url": item['moby_url'],

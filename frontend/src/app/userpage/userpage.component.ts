@@ -39,7 +39,6 @@ export class UserpageComponent {
   addSuggestion(message: string): void {
     if(message != ""){
       let data = {"suggestionMessage":message};
-      console.log(data);
       this.api.addSuggestion(data).subscribe();
       this.submitText = "Submitted!";
     }

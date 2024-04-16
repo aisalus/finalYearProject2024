@@ -26,46 +26,46 @@ export class ResultsComponent {
     await this.setReasoning(history.state);
   }
 
+  // Populates info for game from gameData
   populateGameData(data: any): void {
     this.resultData = data;
     this.coverImage = data.sample_cover.image ? data.sample_cover.image : this.coverImage;
     this.screenshotImage = data.sample_screenshots[0] ? data.sample_screenshots[0].image : this.screenshotImage;
-    this.description = data.description.length > 2 ? this.formatDesc(data.description) : this.description;
+    this.description = data.description.length > 2 ? this.formattedDescription(data.description) : this.description;
   }
 
+  // Sets reasoning to value from rec engine and formats
   async setReasoning(data: any){
     let rec = data['reasoning'];
     let attString = "";
     this.reasoning = `The similarity level between the input game and ${data['title']} is ${rec['similarityLevel'].toLowerCase()}.<br/>`;
     attString = "<p>The following attribute(s) match the input game:</p><ul>";
-    console.log(rec['matchingAttributes']);
     for(let att in rec['matchingAttributes']){
       attString = attString + `<li>${rec['matchingAttributes'][att]}</li>`;
     }
     this.reasoning = this.reasoning + attString;
   }
   
-  // Formats description into a more readable state
-  // TODO make this less plagiarismy/clean it up
-  formatDesc(description: any) {
-    let sentenceArr = description.split(". ");
-    let formatDesc = "";
-    let counter = 0;
-    let counter2 = 0;
+  // Format description from paragraph to a more readable state
+  formattedDescription(description: any) {
+    let sentences = description.split(". ");
+    let formattedDescription = "";
+    let breakCounter1 = 0;
+    let breakCounter2 = 0;
 
-    for(let i = 0; i < sentenceArr.length; i++) {
-      formatDesc = formatDesc + sentenceArr[i] + ". ";
-      counter ++;
-      if(counter === 3) {
-        formatDesc = formatDesc + "<br/>";
-        counter = 0;
-        counter2 ++;
+    for(let i = 0; i < sentences.length; i++) {
+      formattedDescription = formattedDescription + sentences[i] + ". ";
+      breakCounter1 ++;
+      if(breakCounter1 === 3) {
+        formattedDescription = formattedDescription + "<br/>";
+        breakCounter1 = 0;
+        breakCounter2 ++;
       }
-      if(counter2 === 2){
-        formatDesc = formatDesc + "<br/>";
-        counter2 = 0;
+      if(breakCounter2 === 2){
+        formattedDescription = formattedDescription + "<br/>";
+        breakCounter2 = 0;
       }
     }
-    return formatDesc
+    return formattedDescription
   }
 }

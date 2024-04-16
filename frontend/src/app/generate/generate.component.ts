@@ -37,9 +37,11 @@ export class GenerateComponent {
       if (this.user != null){
         userId = this.user.sub.split('|')[1];
       }
+      // Change apiCall if the user is logged in
       let apiCall = (this.user != null) ? this.api.getGameRec(this.selectedGameId, this.sentimentStatus, this.userLibraryStatus, userId) 
       : this.api.getGameRec(this.selectedGameId, this.sentimentStatus, this.userLibraryStatus);
       apiCall.subscribe(data => {
+        // Add recommendation to history and send data to the results page
         this.addToHistory(data);
         this.router.navigateByUrl(`results/${data.id}`, {state: data})
       });

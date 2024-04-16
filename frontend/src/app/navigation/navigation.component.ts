@@ -16,6 +16,7 @@ export class NavigationComponent {
   user: any;
   loggedIn: any = sessionStorage.getItem("loggedIn");
 
+  // Send user data to the api
   setUserData(user: any){
     if(user != null){
       let id = user['sub'].split('|')[1];

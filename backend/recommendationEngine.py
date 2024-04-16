@@ -8,15 +8,16 @@ import requests
 import sentimentAnalysis as snt
 import json
 
-# Main WIPs here:
-# accuracy - how is this measurable?
-# break code down more and comment - readability
 apiUrl = "http://127.0.0.1:5000"
+
 def prepDataframe(gameData, userLibrary = 0):
     data = {}
+
+    # Add input game attributes to attribute string object
     for attK, attV in gameData['attributes'].items():
         data.update({attK: "|".join(attV)})
     
+    # Get all items in user library and add to attribute string object
     if (userLibrary != 0):
         print("LOG --> REC ENGINE --> \tOPTIONAL: Processing user library...")
         for game in userLibrary:
@@ -67,6 +68,7 @@ def attToStr(att):
 def sentimentCalc(recs):
     topRated = ""
     prevScore = 0
+    # Get sentiment of each recommendation and get the highest scoring
     for r in recs:
         score = snt.getSentiment(r)
         if(score > prevScore):
@@ -76,18 +78,7 @@ def sentimentCalc(recs):
         return recs[0]
     return topRated
 
-def recommendGame(gameId, sentiment, library, userId = 0):
-    gameData = json.loads(requests.get(apiUrl + "/api/v1.0/games/" + gameId + "/info").content.decode())
-    print("LOG --> REC ENGINE --> \tInput game:", gameData['title'])
-
-    if(library):
-        library = requests.get(apiUrl + "/api/v1.0/users/" + userId + "/library")
-        library = json.loads(library.content.decode())
-        data = prepDataframe(gameData, library)
-    else:
-        data = prepDataframe(gameData)
-    data = processAttributes(data)
-
+def datasetCleaning(data):
     # Limit dataset to necessary columns
     data = data[['description','title','_id']]
     data = data.drop_duplicates(subset=['title'], keep="first")
@@ -97,14 +88,16 @@ def recommendGame(gameId, sentiment, library, userId = 0):
     # Clean description text
     print("LOG --> REC ENGINE --> \tStage 3: Processing description...")
     data['description'] = data['description'].apply(clean_text)
+    return data
 
+def calculations(data, gameData, sentiment):
     # Find cosine similarity between games
     print("LOG --> REC ENGINE --> \tStage 4: Calculating similarity...")
     v = CountVectorizer(stop_words="english")
     vector = v.fit_transform(data['description'])
     similarities = cosine_similarity(vector)
 
-    # Put similarity calcs into dataframe and use to find highest similarity of chosen game
+    # Put similarity calcs into dataframe and use to find 3 games of highest similarity of chosen game
     df2 = pd.DataFrame(similarities, columns=data['title'], index=data['title']).reset_index()
     recommendations = pd.DataFrame(df2.nlargest(4,gameData['title'])[['title',gameData['title']]])
     recommendations = recommendations[recommendations['title']!=gameData['title']]
@@ -112,12 +105,13 @@ def recommendGame(gameId, sentiment, library, userId = 0):
 
     recTitle = sentimentCalc(recList) if sentiment else recList[0]
     recId = data[data['title']==recTitle]['_id'].values[0]
+
+    # similarity score is where the resulting recTitle matches input game title in recommendations dataframe
     similarity = recommendations[recommendations['title']==recTitle][gameData['title']].values[0]
+
     result = {"title":recTitle, "id":recId, "similarity":similarity}
+
     print(f"LOG --> REC ENGINE --> \tResulting game: {result['title']}")
-    reasoning = compareInputAndResult(result, gameData)
-    result.update({"reasoning":reasoning})
-    result.pop("similarity")
     return result
 
 def compareInputAndResult(result, inputData):
@@ -146,3 +140,25 @@ def compareInputAndResult(result, inputData):
         "similarityLevel": similarityLevel
     }
     return resData
+
+def recommendMain(gameId, sentiment, library, userId = 0):
+    gameData = json.loads(requests.get(apiUrl + "/api/v1.0/games/" + gameId + "/info").content.decode())
+    print("LOG --> REC ENGINE --> \tInput game:", gameData['title'])
+
+    # If user selects to use game library get it and prep data
+    if(library):
+        library = requests.get(apiUrl + "/api/v1.0/users/" + userId + "/library")
+        library = json.loads(library.content.decode())
+        data = prepDataframe(gameData, library)
+    else:
+        data = prepDataframe(gameData)
+
+    data = processAttributes(data)
+    data = datasetCleaning(data)
+    result = calculations(data, gameData, sentiment)
+    reasoning = compareInputAndResult(result, gameData)
+
+    result.update({"reasoning":reasoning})
+    result.pop("similarity")
+
+    return result

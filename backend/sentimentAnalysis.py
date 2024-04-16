@@ -3,6 +3,7 @@ import requests
 from transformers import pipeline
 from thefuzz import fuzz
 
+# set headers for web scraper
 headers = {
         'accept':'application/json, text/plain, */*',
         'origin':'https://opencritic.com',
@@ -10,6 +11,7 @@ headers = {
         'user-agent':'Chrome/109.0.0.0'
         }
 
+# Get review page and parse with beautifulsoup
 def getPage(gameid, game, headers):
     url = f"https://opencritic.com/game/{gameid}/{game}/reviews"
     try:
@@ -19,12 +21,14 @@ def getPage(gameid, game, headers):
     except Exception as e:
         print(f"LOG --> SENTIMENT --> \tError opening page {e}")
 
+# Get game id from opencritic
 def getGameId(game, headers):
     searchUrl = f'https://api.opencritic.com/api/meta/search?criteria={game}'
     results = requests.get(searchUrl,headers=headers)
     resultsJson = results.json()
     found_id = -1
 
+    # find game in results - title not always exact between datasets so fuzz ratio is used for similarity ratio
     for r in resultsJson:
         ratio = fuzz.ratio(game.lower(), r['name'].lower())
         if game.lower() in r['name'].lower():
@@ -37,6 +41,7 @@ def getGameId(game, headers):
             return found_id
     return found_id
 
+# Get all reviews on review page
 def getReviews(game):
     id = getGameId(game, headers=headers)
     if(id == -1):
@@ -51,6 +56,7 @@ def getReviews(game):
     
     return result
 
+# Get overall average sentiment for a game's reviews
 def averageSentiment(values):
     score = 0
     for v in values:
@@ -62,6 +68,7 @@ def averageSentiment(values):
         score = score / len(values)
     return score
 
+# Calculate sentiment of all of a game's reviews
 def getSentiment(game):
     reviews = getReviews(game)
     if(reviews == -1):
@@ -69,5 +76,3 @@ def getSentiment(game):
     pipe = pipeline("sentiment-analysis", model="distilbert/distilbert-base-uncased-finetuned-sst-2-english")
     values = pipe(reviews)
     return averageSentiment(values)
-
-# TODO: Comment, print descriptively for logging
