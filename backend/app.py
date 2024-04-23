@@ -67,7 +67,7 @@ def games_by_attribute():
     query = {"$or" : terms}
 
     # Aggregation pipeline to match the query and get a random sample for processing
-    pipeline = [{"$match":query},{"$sample": {"size": 500}}]
+    pipeline = [{"$match":query},{"$sample": {"size": 1000}}]
 
     games = coll.aggregate(pipeline)
     for game in games:

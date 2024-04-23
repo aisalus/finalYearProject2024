@@ -126,11 +126,12 @@ def compareInputAndResult(result, inputData):
             [matchingAttributes.append(item) for item in foundAttrs]
 
     descriptionSimilarityScore = result['similarity']
-    if(descriptionSimilarityScore > 0.7):
+    # These values seem low, however as descriptions are so vastly different these are based on a sample of recommendations and subjective similarity
+    if(descriptionSimilarityScore > 0.6):
         similarityLevel = "Very high"
-    elif(descriptionSimilarityScore > 0.5):
+    elif(descriptionSimilarityScore > 0.4):
         similarityLevel = "High"
-    elif(descriptionSimilarityScore > 0.3):
+    elif(descriptionSimilarityScore > 0.2):
         similarityLevel = "Medium"
     else:
         similarityLevel = "Low"
