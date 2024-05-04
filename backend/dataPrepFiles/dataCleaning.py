@@ -2,7 +2,6 @@ from bs4 import BeautifulSoup
 from pymongo import MongoClient
 import requests as r
 import re
-import string
 from thefuzz import fuzz
 
 client = MongoClient("mongodb://127.0.0.1:27017")
@@ -18,7 +17,6 @@ def cleanDescriptions():
     while index != count:
         doc = cursor[index]
         print('updating doc', index)
-        # modify doc ..
         cleantext = BeautifulSoup(doc["description"], "lxml").text
         coll.update_one({"_id": doc["_id"]},{"$set": {"description": cleantext}})
         index += 1
@@ -31,12 +29,11 @@ def fixGenreNames():
     while index != count:
         doc = cursor[index]
         print('updating doc', index)
-        # modify doc ..
         newAttributes = {}
         try:
             for att in doc['attributes']:
                 if(att['genre_category'] in  newAttributes.keys()):
-                    # print("Adding to", att['genre_category'], "... ")
+                    print("Adding to", att['genre_category'], "... ")
                     newAttributes[att['genre_category']].append(att['genre_name'])
                 else:
                     newAttributes.update({att['genre_category']: [att['genre_name']]})

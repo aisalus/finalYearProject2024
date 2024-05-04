@@ -63,7 +63,7 @@ def games_by_attribute():
 
     for itemK, itemV in data.items():
         terms.append({"attributes."+ itemK : {'$regex':'.*'+itemV+'.*', '$options' :'i'}})
-    # Query to match where 'Basic Genres' contains any of the provided genres
+    # Query to match items containing any of the input attributes
     query = {"$or" : terms}
 
     # Aggregation pipeline to match the query and get a random sample for processing

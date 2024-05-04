@@ -53,7 +53,7 @@ def processAttributes(data):
     data['description'] = data['description'] + " " + data['newAttributes']
     return data
 
-def clean_text(text):
+def cleanText(text):
     result = str(text).lower()
     return(result)
 
@@ -87,7 +87,7 @@ def datasetCleaning(data):
 
     # Clean description text
     print("LOG --> REC ENGINE --> \tStage 3: Processing description...")
-    data['description'] = data['description'].apply(clean_text)
+    data['description'] = data['description'].apply(cleanText)
     return data
 
 def calculations(data, gameData, sentiment):
@@ -120,10 +120,10 @@ def compareInputAndResult(result, inputData):
     inputAttributes = inputData['attributes']
     matchingAttributes = []
 
-    for attKres, attVres in resultAttributes.items():
-        for attKin, attVin in inputAttributes.items():
-            foundAttrs = [att for att in attVres if att in attVin]
-            [matchingAttributes.append(item) for item in foundAttrs]
+    for resultAttributeKey, resultAttributeValue in resultAttributes.items():
+        for inputAttributeKey, inputAttributeValue in inputAttributes.items():
+            # Each attribute value is an array, so iterate through and append matches to matching attributes
+            [matchingAttributes.append(attribute) for attribute in resultAttributeValue if attribute in inputAttributeValue]
 
     descriptionSimilarityScore = result['similarity']
     # These values seem low, however as descriptions are so vastly different these are based on a sample of recommendations and subjective similarity
